@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>HTML 5 L3</title>
+		<script type="text/javascript" src="./worker_calculation.js"></script>
+		<script type="text/javascript">
+			var worker_obj = "undefined";
+			
+			// Function to check if the number is prime
+			function isPrime(num) {
+				num = Number(num);
+				i = 2;
+				while(i<num/2) {
+					if(num%i === 0)
+						return false;
+					else
+						i = i+1;
+				}
+				return true;
+			}
+
+			// Function to start the web worker
+			function start() {
+				if (typeof(Storage) !== "undefined") {
+					var inputNumber = document.getElementById("inputNumber").value;
+					localStorage.setItem("inputNumber", inputNumber);
+					if (typeof(Worker) !== "undefined") {
+						if(worker_obj == "undefined") {
+							// Instantiating the Worker
+							worker_obj = new Worker('worker_calculation.js');
+							// Starting the worker by sending a first message
+    						worker_obj.postMessage(inputNumber);
+							// Getting ready to handle the message sent back by the worker
+							worker_obj.addEventListener("message", function (event) {
+								// Checking if the prime number has been achieved
+								if(isPrime(event.data)) {
+									document.getElementById("result").innerHTML = "Prime number found "+event.data + "!";
+									worker_obj.terminate();
+									worker_obj = "undefined";
+								}
+								else
+									document.getElementById("result").innerHTML = event.data;
+							}, false);
+						}
+					} 
+					else {
+					    document.getElementById("result").innerHTML = "Web worker is not supported by your browser!"
+					}
+				} 
+				else {
+					document.getElementById("result").innerHTML = "Web storage is not supported by your browser!"
+				}
+			}
+
+			// Function to stop the web worker
+			function end() { 
+			    worker_obj.terminate();
+			    worker_obj = undefined;
+			}
+		</script>
+	</head>
+	<body>
+		<p>Please use <b>Mozilla Firefox</b> to veiw this as Google Chrome has issues in supporting web workers</p>
+		<label for="inputNumber">Enter Number</label>
+		<input type="number" max='100' name="inputNumber" id="inputNumber">
+		<br>
+		<button type="button" onclick="start()">Start</button>
+		<button type="button" onclick="end()">End</button>
+		<br>
+		<p id="result"></p>
+	</body>
+</html>
